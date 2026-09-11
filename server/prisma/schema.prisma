@@ -1,0 +1,127 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum Role {
+  ADMIN
+  PM
+  DEVELOPER
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+model User {
+  id            String   @id @default(uuid())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  role          Role
+  createdAt     DateTime @default(now())
+
+  projectsCreated   Project[]      @relation("ProjectManager")
+  tasksAssigned     Task[]         @relation("AssignedDeveloper")
+  activityLogs      TaskActivityLog[]
+  notifications     Notification[]
+  refreshTokens     RefreshToken[]
+
+  @@index([role])
+}
+
+model Client {
+  id       String    @id @default(uuid())
+  name     String
+  projects Project[]
+}
+
+model Project {
+  id          String   @id @default(uuid())
+  name        String
+  client      Client   @relation(fields: [clientId], references: [id])
+  clientId    String
+  manager     User     @relation("ProjectManager", fields: [managerId], references: [id])
+  managerId   String
+  createdAt   DateTime @default(now())
+  tasks       Task[]
+
+  @@index([managerId])
+  @@index([clientId])
+}
+
+model Task {
+  id           String     @id @default(uuid())
+  title        String
+  description  String
+  project      Project    @relation(fields: [projectId], references: [id])
+  projectId    String
+  assignee     User       @relation("AssignedDeveloper", fields: [assigneeId], references: [id])
+  assigneeId   String
+  status       TaskStatus @default(TODO)
+  priority     Priority
+  dueDate      DateTime
+  isOverdue    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  activityLogs TaskActivityLog[]
+  notifications Notification[]
+
+  @@index([projectId])
+  @@index([assigneeId])
+  @@index([status])
+  @@index([dueDate])
+}
+
+model TaskActivityLog {
+  id          String   @id @default(uuid())
+  task        Task     @relation(fields: [taskId], references: [id])
+  taskId      String
+  changedBy   User     @relation(fields: [changedById], references: [id])
+  changedById String
+  fromStatus  TaskStatus?
+  toStatus    TaskStatus
+  createdAt   DateTime @default(now())
+
+  @@index([taskId, createdAt])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  task      Task?    @relation(fields: [taskId], references: [id])
+  taskId    String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId, isRead])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  tokenHash String
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
