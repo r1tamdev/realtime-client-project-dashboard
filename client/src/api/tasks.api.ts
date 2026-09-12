@@ -3,6 +3,7 @@ import type { Task, TaskFilters, TaskStatus } from '../types/task.types';
 
 export async function fetchTasks(filters: TaskFilters): Promise<Task[]> {
   const params = new URLSearchParams();
+  if (filters.projectId) params.set('projectId', filters.projectId);
   if (filters.status) params.set('status', filters.status);
   if (filters.priority) params.set('priority', filters.priority);
   if (filters.dueDateFrom) params.set('dueDateFrom', filters.dueDateFrom);

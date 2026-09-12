@@ -29,7 +29,7 @@ export async function getActivityFeed(userId: string, role: Role, filters: Activ
     where.createdAt = { gt: new Date(filters.since) };
   }
 
-  return prisma.taskActivityLog.findMany({
+  const logs = await prisma.taskActivityLog.findMany({
     where,
     include: {
       task: { select: { id: true, title: true, projectId: true } },
@@ -38,4 +38,15 @@ export async function getActivityFeed(userId: string, role: Role, filters: Activ
     orderBy: { createdAt: 'desc' },
     take: limit,
   });
+
+  return logs.map((log) => ({
+    id: log.id,
+    taskId: log.taskId,
+    taskTitle: log.task.title,
+    projectId: log.task.projectId,
+    changedByName: log.changedBy.name,
+    fromStatus: log.fromStatus,
+    toStatus: log.toStatus,
+    createdAt: log.createdAt,
+  }));
 }

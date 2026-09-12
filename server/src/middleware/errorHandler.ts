@@ -3,9 +3,9 @@ import { AppError } from '../utils/appError';
 
 export function errorHandler(
   err: Error,
-  req: Request,
+  _req: Request,
   res: Response,
-  next: NextFunction
+  _next: NextFunction
 ) {
   if (err instanceof AppError) {
     return res.status(err.statusCode).json({
@@ -15,4 +15,13 @@ export function errorHandler(
       },
     });
   }
+
+  console.error('[errorHandler]', err);
+
+  return res.status(500).json({
+    error: {
+      message: 'Internal server error',
+      statusCode: 500,
+    },
+  });
 }

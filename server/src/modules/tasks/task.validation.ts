@@ -15,6 +15,7 @@ export const updateTaskStatusSchema = z.object({
 });
 
 export const taskFilterSchema = z.object({
+  projectId: z.string().uuid().optional(),
   status: z.enum(['TODO', 'IN_PROGRESS', 'IN_REVIEW', 'DONE']).optional(),
   priority: z.enum(['LOW', 'MEDIUM', 'HIGH', 'CRITICAL']).optional(),
   dueDateFrom: z.string().optional(),

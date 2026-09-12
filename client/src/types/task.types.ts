@@ -18,6 +18,7 @@ export interface Task {
 }
 
 export interface TaskFilters {
+  projectId?: string;
   status?: TaskStatus;
   priority?: Priority;
   dueDateFrom?: string;

@@ -12,17 +12,24 @@ interface ActivityFeedProps {
 export default function ActivityFeed({ projectId }: ActivityFeedProps) {
   const [events, setEvents] = useState<ActivityEvent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [lastSeenAt, setLastSeenAt] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       setIsLoading(true);
-      const data = await fetchActivityFeed({ projectId, limit: 20 });
-      setEvents(data);
-      if (data.length > 0) {
-        setLastSeenAt(data[0].createdAt);
+      setError(null);
+      try {
+        const data = await fetchActivityFeed({ projectId, limit: 20 });
+        setEvents(data);
+        if (data.length > 0) {
+          setLastSeenAt(data[0].createdAt);
+        }
+      } catch {
+        setError('Failed to load activity');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     load();
   }, [projectId]);
@@ -30,10 +37,14 @@ export default function ActivityFeed({ projectId }: ActivityFeedProps) {
   useEffect(() => {
     async function catchUpMissedEvents() {
       if (!lastSeenAt) return;
-      const missed = await fetchActivityFeed({ projectId, since: lastSeenAt });
-      if (missed.length > 0) {
-        setEvents((prev) => [...missed, ...prev]);
-        setLastSeenAt(missed[0].createdAt);
+      try {
+        const missed = await fetchActivityFeed({ projectId, since: lastSeenAt });
+        if (missed.length > 0) {
+          setEvents((prev) => [...missed, ...prev]);
+          setLastSeenAt(missed[0].createdAt);
+        }
+      } catch {
+        // Ignore catch-up failures; live socket events still update the feed
       }
     }
 
@@ -54,6 +65,7 @@ export default function ActivityFeed({ projectId }: ActivityFeedProps) {
   });
 
   if (isLoading) return <LoadingSpinner />;
+  if (error) return <p className="text-red-500 text-sm">{error}</p>;
 
   return (
     <div className="space-y-2">

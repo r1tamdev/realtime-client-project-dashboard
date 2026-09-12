@@ -53,6 +53,10 @@ export async function createTask(
 function buildFilterWhere(filters: TaskFilterInput) {
   const where: Record<string, unknown> = {};
 
+  if (filters.projectId) {
+    where.projectId = filters.projectId;
+  }
+
   if (filters.status) {
     where.status = filters.status;
   }

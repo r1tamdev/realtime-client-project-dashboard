@@ -6,6 +6,7 @@ import { useSocketStore } from '../stores/socketStore';
 export function useAuthInit() {
   const [isLoading, setIsLoading] = useState(true);
   const setAuth = useAuthStore((state) => state.setAuth);
+  const setAccessToken = useAuthStore((state) => state.setAccessToken);
   const connectSocket = useSocketStore((state) => state.connect);
 
   useEffect(() => {
@@ -13,6 +14,7 @@ export function useAuthInit() {
       try {
         const response = await axiosClient.post('/auth/refresh');
         const accessToken = response.data.accessToken;
+        setAccessToken(accessToken);
 
         const meResponse = await axiosClient.get('/auth/me');
         setAuth(meResponse.data, accessToken);
@@ -25,7 +27,7 @@ export function useAuthInit() {
     }
 
     tryRestoreSession();
-  }, [setAuth, connectSocket]);
+  }, [setAuth, setAccessToken, connectSocket]);
 
   return { isLoading };
 }

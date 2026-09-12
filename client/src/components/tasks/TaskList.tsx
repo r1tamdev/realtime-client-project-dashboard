@@ -1,13 +1,18 @@
 import { useEffect, useState, useCallback } from 'react';
-import type{ Task, TaskStatus } from '../../types/task.types';
+import type { Task, TaskStatus } from '../../types/task.types';
 import { fetchTasks, updateTaskStatus } from '../../api/tasks.api';
 import { useTaskFilters } from '../../hooks/useTaskFilters';
+import { useSocketEvent } from '../../hooks/useSocketEvent';
 import TaskCard from './TaskCard';
 import TaskFilters from './TaskFilters';
 import LoadingSpinner from '../common/LoadingSpinner';
 import ErrorBanner from '../common/ErrorBanner';
 
-export default function TaskList() {
+interface TaskListProps {
+  projectId?: string;
+}
+
+export default function TaskList({ projectId }: TaskListProps) {
   const { filters } = useTaskFilters();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -17,18 +22,26 @@ export default function TaskList() {
     setIsLoading(true);
     setError(null);
     try {
-      const data = await fetchTasks(filters);
+      const data = await fetchTasks({ ...filters, projectId });
       setTasks(data);
     } catch {
       setError('Failed to load tasks');
     } finally {
       setIsLoading(false);
     }
-  }, [filters.status, filters.priority, filters.dueDateFrom, filters.dueDateTo]);
+  }, [filters.status, filters.priority, filters.dueDateFrom, filters.dueDateTo, projectId]);
 
   useEffect(() => {
     loadTasks();
   }, [loadTasks]);
+
+  useSocketEvent<{ taskIds: string[] }>('task:overdue', ({ taskIds }) => {
+    setTasks((prev) =>
+      prev.map((task) =>
+        taskIds.includes(task.id) ? { ...task, isOverdue: true } : task
+      )
+    );
+  });
 
   async function handleStatusChange(taskId: string, newStatus: TaskStatus) {
     try {

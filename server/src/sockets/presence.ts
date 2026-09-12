@@ -14,6 +14,11 @@ export function registerPresenceHandlers(io: SocketIOServer, socket: Authenticat
     broadcastOnlineCount(io);
   }
 
+  // Admins need the current count immediately on connect (not only on 0→1 transitions)
+  if (socket.role === 'ADMIN') {
+    socket.emit('presence:count', { onlineCount: onlineUsers.size });
+  }
+
   socket.on('disconnect', () => {
     const count = onlineUsers.get(socket.userId) ?? 1;
 
