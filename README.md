@@ -203,3 +203,7 @@ Prisma 7 decouples the query engine from a bundled native binary, requiring an e
 - **Notification delivery is best-effort over the socket connection.** If a user is disconnected when a notification is created, they will see the updated unread count on next reconnect/page load (since it's read fresh from the database), but there is no push notification channel for a fully offline user.
 
 ---
+
+<p align="center">
+  Created by <strong>Ritam Chowdhury</strong>
+</p>
