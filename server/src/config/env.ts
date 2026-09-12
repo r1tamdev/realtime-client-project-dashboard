@@ -3,7 +3,7 @@ const requiredEnvVars = [
   'JWT_ACCESS_SECRET',
   'JWT_REFRESH_SECRET',
   'PORT',
-  'CLIENT_ORIGIN',
+  'CLIENT_URL',
 ] as const;
 
 type EnvVar = typeof requiredEnvVars[number];

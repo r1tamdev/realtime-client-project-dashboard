@@ -1,16 +1,17 @@
 import { Request, Response, NextFunction } from 'express';
 import { login, refreshAccessToken, logout } from './auth.service';
 import { AppError } from '../../utils/appError';
+import prisma from '../../config/db';
 
 const REFRESH_COOKIE_NAME = 'refreshToken';
-const REFRESH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // 7 days, matches service TTL
+const REFRESH_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; 
 
 const cookieOptions = {
   httpOnly: true,
-  secure: process.env.NODE_ENV === 'production', // HTTPS-only in prod, allow HTTP in local dev
+  secure: process.env.NODE_ENV === 'production', 
   sameSite: 'lax' as const,
   maxAge: REFRESH_COOKIE_MAX_AGE_MS,
-  path: '/api/auth', // cookie only sent to auth routes, not every request
+  path: '/api/auth', 
 };
 
 export async function loginHandler(req: Request, res: Response, next: NextFunction) {
@@ -57,6 +58,18 @@ export async function logoutHandler(req: Request, res: Response, next: NextFunct
 
     res.clearCookie(REFRESH_COOKIE_NAME, { path: '/api/auth' });
     res.status(200).json({ message: 'Logged out successfully' });
+  } catch (err) {
+    next(err);
+  }
+}
+
+export async function meHandler(req: Request, res: Response, next: NextFunction) {
+  try {
+    const user = await prisma.user.findUnique({
+      where: { id: req.user!.userId },
+      select: { id: true, name: true, email: true, role: true },
+    });
+    res.status(200).json(user);
   } catch (err) {
     next(err);
   }

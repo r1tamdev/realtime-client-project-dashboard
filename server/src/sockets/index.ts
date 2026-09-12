@@ -15,7 +15,7 @@ let io: SocketIOServer;
 export function initSocketServer(httpServer: HttpServer) {
   io = new SocketIOServer(httpServer, {
     cors: {
-      origin: env.CLIENT_ORIGIN,
+      origin: env.CLIENT_URL,
       credentials: true,
     },
   });

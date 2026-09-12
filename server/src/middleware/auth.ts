@@ -13,6 +13,10 @@ export function authenticate(req: Request, res: Response, next: NextFunction) {
 
   const token = authHeader.split(' ')[1];
 
+  if(!token) {
+    return next(new AppError(401, 'No access token provided'));
+  }
+
  try {
   const payload = jwt.verify(token, env.JWT_ACCESS_SECRET) as unknown as AuthPayload;
   req.user = { userId: payload.userId, role: payload.role };
